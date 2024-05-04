@@ -7,28 +7,19 @@ if(isset($_POST['email']) && isset($_POST['password']) && isset($_POST['x'])){
     $password = $_POST['password'];
 
     if($x === "user"){ 
-        $sql = "SELECT * FROM users WHERE email=:email AND password=:password";
-        $res = $con->prepare($sql);
-        $res->bindParam(':email', $email);
-        $res->bindParam(':password', $password);
-        $res->execute(); 
-
-        if($res->rowCount() > 0){
-            header('location: user.php');
-        } else {
-            echo "This user is not signed up. Please sign up and try again.";
-        }
+         $user=new user($email,$password);
+         if($user($con)->login()){
+           echo "login scusaful";
+            header('location:userPage.php');
+         }
     } else {
-        $sql = "SELECT * FROM admin WHERE email=:email AND password=:password";
-        $res = $con->prepare($sql);
-        $res->bindParam(':email', $email);
-        $res->bindParam(':password', $password);
-        $res->execute(); 
-        if($res->rowCount() > 0){
-            header('location: admin.php');
-        } else {
-            echo "This admin is not signed up.";
-        }
+         $admin =new admin($email,$password);
+         if($admin($con)->login()){
+           echo "login scusaful";
+            header('location:adminPage.php');
+         }
+         else
+             echo "login filed ";
     }
 }
 ?>
