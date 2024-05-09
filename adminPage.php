@@ -1,32 +1,62 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-include'connect.php';
-if(isset($_POST['name']) && isset($_POST['email']) && isset($_POST['tel']) && isset($_POST['password']) ){
-$name=$_POST['name'];
-$email=$_POST['email'];
-$tel=$_POST['tel'];
-$password=$_POST['password'];
-$sql="INSERT INTO users (name,email,tel,password) VALUES (:name,:email,:tel,:password)";
-$res=$con->prepare($sql);
-$tab=array(':name'=>$name,':email'=>$email,':tel'=>$tel,':password'=>$password);
-$resultat=$res->execute($tab);
-if ($resultat){
-    $user=1;
-    echo "Ineseted success";
-}
-else {
-    $user=0;
-     echo "Ineseted faild";
+require_once('connect.php');
+require_once('user.php');
+require_once('admin.php');
+require_once('item.php');
+
+// Handle user signup
+if(isset($_POST['name']) && isset($_POST['email']) && isset($_POST['tel']) && isset($_POST['password'])) {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $tel = $_POST['tel'];
+    $password = $_POST['password'];
+
+    $user = new user($con, $name, $email, $tel, $password);
+    if(!$user->userIsExist()) {
+        if($user->signup()) {
+            echo "User added successfully.";
+            exit; // Ensure that no code is executed after the redirection
+        } else {
+            echo "Error in user registration.";
+        }
+    } else {
+        echo "This user already exists.";
     }
-
-
 }
+
+// Handle item addition
+if(isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES['image']) && isset($_POST['location']) && isset($_POST['description']) && isset($_POST['rating']) && isset($_POST['discount']) && isset($_POST['price'])) 
+ {
+    $image = $_FILES['image'];
+    $location = $_POST['location'];
+    $description = $_POST['description'];
+    $rating = $_POST['rating'];
+    $price = $_POST['price'];
+    $discount = $_POST['discount'];
+
+    $path = "/images" . "/" . $image["name"];
+
+    $item = new item($con, $path, $location, $description, $rating, $price, $discount);
+    if(!$item->itemIsExist()) {
+        if($item->addItem()) {
+            echo "<script>alert('Item added successfully.')</script>";
+        } else {
+            echo "<script>alert('Failed to add item.')</script>";
+        }
+    } else {
+        echo "<script>alert('This item already exists')</script>";
+    }
+}
+?>
 
        
 
 
 
-?>
+
 
 
 <!DOCTYPE html>
@@ -45,6 +75,24 @@ else {
 </head>
 </head>
 <body>
+
+
+
+<header>
+        <div id="menu-bar" class="fas fa-bars" onclick="showmenu()"></div>
+     
+        <nav class="navbar">
+            <a href="#home">home</a>
+            <a href="#book">book</a>
+            <a href="#packages">packages</a>
+            <a href="#services">services</a>
+            <a href="#gallary">gallary</a>
+            <a href="#review">review</a>
+            <a href="#contact">contact</a>
+
+      </div>
+</header>
+      
 
     <!------------------------------------------------------------------------------------>
     <!------------------------------------------------------------------------------------>
@@ -128,19 +176,7 @@ else {
     </thead>
     <tbody>
         <?php
-        $sql="SELECT * FROM users ";
-        $res=$con->query($sql);
-        while($row=$res->fetch()) {
-            echo"<tr>";
-            echo"<td>".$row['id']."</td>";
-            echo"<td>".$row['name']."</td>";
-            echo"<td>".$row['email']."</td>";
-            echo"<td>".$row['tel']."</td>";
-            echo"<td><a class='btn btn-danger' href='delete.php?id=".$row['id']."'>delete</a></td>";
-            echo"<td><a class='btn btn-success' href='update.php?id=".$row['id']."'>update</a></td>";
-            echo"</tr>";
-
-        }
+         admin::desplayUser($con);
         ?>
      
     </tbody>
@@ -158,40 +194,55 @@ else {
             <span>d</span>
             &nbsp;
             &nbsp;
-            <span>C</span>
-            <span>A</span>
-            <span>R</span>
-            <span>D</span>
+            <span>I</span>
+            <span>T</span>
+            <span>E</span>
+            <span>M</span>
             
         </h1>
-
+        <div class="container mt-5">
         <div class="row">
-            <div class="image">
-                <img src="images/book-img.svg" alt="">
+            <div class="col-md-6 offset-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        Upload Item
+                    </div>
+                    <div class="card-body">
+                        <form action="" method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="image">Image:</label>
+                                <input type="file" class="form-control-file" id="image" name="image">
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location:</label>
+                                <input type="text" class="form-control" id="location" name="location">
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Description:</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="rating">Rating:</label>
+                                <input type="number" class="form-control" id="rating" name="rating" min="1" max="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="price">Price:</label>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="discount_price">Discount Price:</label>
+                                <input type="number" class="form-control" id="discount_price" name="discount_price" step="0.01">
+                            </div>
+                            <button type="submit" class="btn" >Submit</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <form method="post">
-                <div class="inputdiv">
-                    <h3>user name</h3>
-                    <input type="text" placeholder="user name" name="name">
-                </div>
-                <div class="inputdiv">
-                    <h3>user eamil</h3>
-                    <input type="text" placeholder="user eamil" name="email">
-                </div>
-                <div class="inputdiv">
-                    <h3>user number phone</h3>
-                    <input type="text" placeholder="user number phone"name="tel">
-                </div>
-
-                <div class="inputdiv">
-                    <h3>user password</h3>
-                    <input type="password" placeholder="your password"name="password">
-                </div>
-                <div class="inputdiv">
-
-                <input type="submit" class="btn" value="Sign up now">
-            </form>
         </div>
+    </div>
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</body>
     </section> 
     
 </body>

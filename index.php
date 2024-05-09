@@ -1,5 +1,7 @@
 <?php
 include 'connect.php';
+include 'user.php';
+include 'admin.php';
 
 if(isset($_POST['email']) && isset($_POST['password']) && isset($_POST['x'])){
     $x = strtolower($_POST['x']);
@@ -7,14 +9,16 @@ if(isset($_POST['email']) && isset($_POST['password']) && isset($_POST['x'])){
     $password = $_POST['password'];
 
     if($x === "user"){ 
-         $user=new user($email,$password);
-         if($user($con)->login()){
+         $user=new user($con,null,$email,null,$password);
+         if($user->userIsExist()){
+         if($user->login()){
            echo "login scusaful";
             header('location:userPage.php');
          }
+        }
     } else {
-         $admin =new admin($email,$password);
-         if($admin($con)->login()){
+         $admin =new admin($con,$email,$password);
+         if($admin->login()){
            echo "login scusaful";
             header('location:adminPage.php');
          }
@@ -93,7 +97,7 @@ if(isset($_POST['email']) && isset($_POST['password']) && isset($_POST['x'])){
             <input type="checkbox" id="remember">
             <label for="remmember"> remember me</label>
             <p>forget password? <a href="">click here</a></p>
-            <p>don't have acount? <a href="Sign_Up.php">sign up</a></p>
+            <p>don't have acount? <a href="signup.php">sign up</a></p>
         </form>
     </div>
     <!-------------------------------------------------------------------------------->

@@ -1,14 +1,21 @@
 <?php 
-class user extends admin{
-    private $name;
-    private $tel ;
-    
-    public function __construct($name,$email, $tel,$password){
-       super($email,$password);
-       $this->name=$name;
-       $this->tel =$tel;
-    }
+class user  {
+    private $con;
 
+    private $name;
+    private $email;
+    private $tel ;
+    private $password;
+   
+    
+    public function __construct($con,$name, $email, $tel, $password) {
+        $this->con = $con;
+        $this->name = $name;
+        $this->email = $email;
+        $this->tel = $tel;
+        $this->password = $password;
+    }
+    
     public function getname(){
         return $this->name;
     }
@@ -23,17 +30,57 @@ class user extends admin{
         $this->tel=$tel;
     }
 
-    public funtion singup(){
-        $sql="INSERT INTO `users`(`id` ,`name`, `email`, `tel`, `password`) VALUES (null,:name,:email,:tel,'[:password')";
-        $res=$con->prepare($sql);
-        $tab=array(':name'=>$name,':email'=>$email,':tel'=>$tel,':password'=>$password);
+     
+    public function getemail(){
+        return $this->email;
+    }
+    public function setemail($email){
+        $this->email=$email;
+    }
+    function login(){
+        $sql = "SELECT * FROM users WHERE email=:email AND password=:password";
+        $res=$this->con->prepare($sql);
+        $tab=array(':email'=>$this->email,':password'=>$this->password);
+        $resultat=$res->execute($tab);
+        return $resultat;
+       }
+    public function signup(){
+        $sql = "INSERT INTO `users`(`id`, `name`, `email`, `tel`, `password`) VALUES (null, :name, :email, :tel, :password)";
+        $res = $this->con->prepare($sql);
+        $tab = array(':name' => $this->name, ':email' => $this->email, ':tel' => $this->tel, ':password' => $this->password);
         $res->execute($tab);
-       return $res;
+        return $res;
     }
 
 
+    public  function userIsExist() {
+        $sql = "SELECT * FROM users WHERE  email=:email";
+        $res = $this->con-> prepare($sql);
+        $tab = array( ':email' => $this->email);
+        $res->execute($tab);
+        $resultat = $res->rowCount();
 
+        if($resultat > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    public static function deleteUser($con,$id){ 
+    $sql="DELETE FROM users WHERE id=:id";
+    $res=$con->prepare($sql);
+    $tab=array(':id'=>$id);
+    $resultat=$res->execute($tab);
+    if ($resultat){
+        $user=1;
+        echo "Deleted success";
+        header('location: admin.php');
+    }
+    }
+ 
+
+ 
+    
 }
-
-
-?>
